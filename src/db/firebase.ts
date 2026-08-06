@@ -25,6 +25,8 @@ const app = initializeApp(firebaseConfig);
 export const firestore = getFirestore(app);
 export const auth = getAuth(app);
 
+import { getLocalUser } from './auth';
+
 const SYNC_CODE_KEY = 'berichtsheft_sync_code';
 
 /**
@@ -32,8 +34,9 @@ const SYNC_CODE_KEY = 'berichtsheft_sync_code';
  */
 export function getSyncCode(): string {
   let code = localStorage.getItem(SYNC_CODE_KEY);
-  if (!code || (auth.currentUser?.email?.includes('eschehood44') && code !== 'BH-758150')) {
-    if (auth.currentUser?.email?.includes('eschehood44')) {
+  const localUser = getLocalUser();
+  if (!code || (localUser?.email?.includes('eschehood44') && code !== 'BH-758150')) {
+    if (localUser?.email?.includes('eschehood44')) {
       code = 'BH-758150';
     } else if (!code) {
       code = 'BH-' + Math.floor(100000 + Math.random() * 900000);

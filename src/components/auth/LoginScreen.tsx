@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ChefHat, Lock, User as UserIcon, Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
-import { loginWithUserCredentials } from '../../db/firebase';
+import { ChefHat, Lock, User as UserIcon, Eye, EyeOff, LogIn, ShieldCheck, Server } from 'lucide-react';
+import { loginWithLocalCredentials } from '../../db/auth';
 
 interface LoginScreenProps {
   onLoginSuccess: (userEmail: string) => void;
@@ -15,8 +15,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!usernameInput.trim() || !passwordInput.trim()) {
-      setErrorMsg('Bitte geben Sie Ihre Benutzer-ID / E-Mail und Ihr Passwort ein.');
+    if (!usernameInput.trim()) {
+      setErrorMsg('Bitte geben Sie Ihre Benutzer-ID oder E-Mail ein.');
       return;
     }
 
@@ -24,15 +24,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setErrorMsg(null);
 
     try {
-      const u = await loginWithUserCredentials(usernameInput, passwordInput);
+      const u = await loginWithLocalCredentials(usernameInput, passwordInput);
       onLoginSuccess(u.email || usernameInput);
     } catch (err: any) {
       console.error('Auth error:', err);
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setErrorMsg('Falsches Passwort oder ungültiges Login. Bitte prüfen Sie Ihre Eingaben.');
-      } else {
-        setErrorMsg(err.message || 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.');
-      }
+      setErrorMsg(err.message || 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.');
     } finally {
       setLoading(false);
     }
@@ -54,8 +50,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <h1 className="text-2xl font-black text-white tracking-tight">IHK Berichtsheft</h1>
             <p className="text-xs text-amber-400 font-semibold mt-0.5">Fachkraft Küche (BBiG § 13 & 14)</p>
           </div>
+          
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-semibold text-emerald-400">
+            <Server className="w-3.5 h-3.5" />
+            <span>Lokaler / Self-Hosted Modus</span>
+          </div>
+
           <p className="text-xs text-slate-400">
-            Bitte melden Sie sich an, um Zugriff auf Ihre Wochenberichte zu erhalten.
+            Melden Sie sich an, um Zugriff auf Ihre lokalen Wochenberichte zu erhalten.
           </p>
         </div>
 
@@ -92,7 +94,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
-                required
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="••••••••"
@@ -135,9 +136,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         {/* Security Badge */}
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Verschlüsselte & geschützte Verbindung</span>
+          <span>Lokale & geschützte Offline-Speicherung</span>
         </div>
       </div>
     </div>
   );
 };
+

@@ -12,8 +12,7 @@ import { BatchExportModal } from './components/pdf/BatchExportModal';
 import { ProfileModal } from './components/profile/ProfileModal';
 import { CloudSyncModal } from './components/ui/CloudSyncModal';
 import { LoginScreen } from './components/auth/LoginScreen';
-import { subscribeAuthState, logoutUser } from './db/firebase';
-import type { User } from 'firebase/auth';
+import { subscribeLocalAuth, logoutLocalUser, type LocalUser } from './db/auth';
 import { IhkReportPdfTemplate } from './components/pdf/IhkReportPdfTemplate';
 import { PDFViewer } from '@react-pdf/renderer';
 import confetti from 'canvas-confetti';
@@ -59,7 +58,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<'calendar' | 'editor' | 'export'>('calendar');
 
   // Auth & Modals
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<LocalUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
@@ -72,9 +71,9 @@ export function App() {
   }>({ isOpen: false, role: 'TRAINEE' });
   const [showPdfPreview, setShowPdfPreview] = useState(false);
 
-  // Subscribe to Firebase Auth
+  // Subscribe to Local Auth
   useEffect(() => {
-    const unsub = subscribeAuthState((user) => {
+    const unsub = subscribeLocalAuth((user) => {
       setCurrentUser(user);
       setAuthChecked(true);
     });
@@ -163,7 +162,7 @@ export function App() {
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenBatchExport={() => setShowBatchExportModal(true)}
         onOpenCloudSync={() => setShowCloudSyncModal(true)}
-        onLogout={logoutUser}
+        onLogout={logoutLocalUser}
         currentUserEmail={currentUser?.email}
         syncCode={syncCode}
         cloudStatus={cloudStatus}
