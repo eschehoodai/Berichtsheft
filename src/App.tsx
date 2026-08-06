@@ -10,6 +10,7 @@ import { SignatureCanvasModal } from './components/signature/SignatureCanvasModa
 import { RemoteApprovalModal } from './components/signature/RemoteApprovalModal';
 import { BatchExportModal } from './components/pdf/BatchExportModal';
 import { ProfileModal } from './components/profile/ProfileModal';
+import { CloudSyncModal } from './components/ui/CloudSyncModal';
 import { IhkReportPdfTemplate } from './components/pdf/IhkReportPdfTemplate';
 import { PDFViewer } from '@react-pdf/renderer';
 import confetti from 'canvas-confetti';
@@ -34,6 +35,9 @@ export function App() {
   const {
     reports,
     profile,
+    syncCode,
+    cloudStatus,
+    changeSyncCode,
     getOrCreateReport,
     setWeekType,
     saveReport,
@@ -53,6 +57,7 @@ export function App() {
 
   // Modals & Feedback
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
   const [showBatchExportModal, setShowBatchExportModal] = useState(false);
   const [showRemoteModal, setShowRemoteModal] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
@@ -139,6 +144,9 @@ export function App() {
         setActiveTab={setActiveTab}
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenBatchExport={() => setShowBatchExportModal(true)}
+        onOpenCloudSync={() => setShowCloudSyncModal(true)}
+        syncCode={syncCode}
+        cloudStatus={cloudStatus}
         approvedCount={approvedCount}
         totalWeeks={allWeeks.length}
       />
@@ -447,6 +455,14 @@ export function App() {
         onClose={() => setShowProfileModal(false)}
         profile={profile}
         onSaveProfile={updateProfile}
+      />
+
+      <CloudSyncModal
+        isOpen={showCloudSyncModal}
+        onClose={() => setShowCloudSyncModal(false)}
+        syncCode={syncCode}
+        cloudStatus={cloudStatus}
+        onChangeSyncCode={changeSyncCode}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChefHat, Calendar, FileText, ShieldCheck, Download, Settings } from 'lucide-react';
+import { ChefHat, Calendar, FileText, ShieldCheck, Download, Settings, Cloud } from 'lucide-react';
 import type { AppProfile } from '../../types/report';
 
 interface HeaderProps {
@@ -8,6 +8,9 @@ interface HeaderProps {
   setActiveTab: (tab: 'calendar' | 'editor' | 'export') => void;
   onOpenProfile: () => void;
   onOpenBatchExport: () => void;
+  onOpenCloudSync?: () => void;
+  syncCode?: string;
+  cloudStatus?: 'CONNECTED' | 'SYNCING' | 'OFFLINE';
   approvedCount: number;
   totalWeeks: number;
 }
@@ -18,6 +21,9 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onOpenProfile,
   onOpenBatchExport,
+  onOpenCloudSync,
+  syncCode,
+  cloudStatus = 'CONNECTED',
   approvedCount,
   totalWeeks
 }) => {
@@ -47,13 +53,24 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onOpenProfile}
-            className="md:hidden p-2 rounded-lg bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700"
-            title="Profil & Einstellungen"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            {onOpenCloudSync && (
+              <button
+                onClick={onOpenCloudSync}
+                className="p-2 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 flex items-center gap-1 text-xs font-bold"
+                title="Cloud Sync"
+              >
+                <Cloud className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={onOpenProfile}
+              className="p-2 rounded-lg bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700"
+              title="Profil & Einstellungen"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -96,8 +113,20 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
 
         {/* Right Stats & Profile Desktop */}
-        <div className="hidden md:flex items-center gap-4">
-          <div className="flex items-center gap-3 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
+        <div className="hidden md:flex items-center gap-3">
+          {/* Cloud Sync Button */}
+          {onOpenCloudSync && (
+            <button
+              onClick={onOpenCloudSync}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500/20 transition text-xs font-semibold"
+              title={`Cloud-Sync Aktiv (Code: ${syncCode || ''})`}
+            >
+              <Cloud className={`w-4 h-4 ${cloudStatus === 'CONNECTED' ? 'text-emerald-400' : 'text-amber-400 animate-spin'}`} />
+              <span>Cloud Sync</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-2.5 bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <div className="text-xs">
               <span className="text-slate-400">Genehmigt: </span>
@@ -126,3 +155,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

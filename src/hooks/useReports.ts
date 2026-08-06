@@ -1,11 +1,46 @@
+import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getOrCreateDefaultProfile } from '../db/database';
 import type { Wochenbericht, DigitalSignature, AppProfile, WochenTyp, BetrieblicheTaetigkeit } from '../types/report';
 import { generateAll156Weeks, getSchoolDaysForWeek } from '../utils/dateUtils';
+import {
+  getSyncCode,
+  setSyncCode as saveSyncCode,
+  pushReportToCloud,
+  pushProfileToCloud,
+  pushAllLocalToCloud,
+  pullAllFromCloud,
+  setupCloudListeners
+} from '../db/firebase';
 
 export function useReports() {
   const reports = useLiveQuery(() => db.reports.toArray(), [], []);
   const profile = useLiveQuery(() => db.profile.toCollection().first(), [], undefined);
+  const [syncCode, setSyncCodeState] = useState<string>(getSyncCode());
+  const [cloudStatus, setCloudStatus] = useState<'CONNECTED' | 'SYNCING' | 'OFFLINE'>('CONNECTED');
+
+  // Setup real-time cloud listener
+  useEffect(() => {
+    const unsub = setupCloudListeners(syncCode, (status) => {
+      setCloudStatus(status);
+    });
+    return () => unsub();
+  }, [syncCode]);
+
+  const changeSyncCode = async (newCode: string): Promise<boolean> => {
+    const cleaned = saveSyncCode(newCode);
+    setSyncCodeState(cleaned);
+    setCloudStatus('SYNCING');
+    
+    // Attempt to pull cloud data for new code
+    const hasCloudData = await pullAllFromCloud(cleaned);
+    if (!hasCloudData) {
+      // If code is fresh, push local data to cloud
+      await pushAllLocalToCloud();
+    }
+    setCloudStatus('CONNECTED');
+    return hasCloudData;
+  };
 
   /**
    * Get or create report object for a given week ID
@@ -50,6 +85,7 @@ export function useReports() {
     };
 
     await db.reports.put(newReport);
+    pushReportToCloud(newReport);
     return newReport;
   };
 
@@ -108,13 +144,13 @@ export function useReports() {
         ];
       }
     } else if (newType === 'URLAUB') {
-      if (updatedCompanyActs.length === 0 || !updatedCompanyActs[0].beschreibung.includes('Urlaub')) {
+      if (updatedCompanyActs.length === 0 || !updatedCompanyActs[0].beschreibung.includes('Erholungsurlaub')) {
         updatedCompanyActs = [
           {
             id: `vacation-${report.id}`,
             date: report.startDate,
             dayOfWeek: 'Montag – Sonntag',
-            beschreibung: 'Urlaub / Tarifeurlaub',
+            beschreibung: 'Tariflicher Erholungsurlaub',
             stunden: 40
           }
         ];
@@ -151,6 +187,7 @@ export function useReports() {
     };
 
     await db.reports.put(updated);
+    pushReportToCloud(updated);
     return updated;
   };
 
@@ -173,6 +210,7 @@ export function useReports() {
     };
 
     await db.reports.put(calculated);
+    pushReportToCloud(calculated);
     return calculated;
   };
 
@@ -194,6 +232,7 @@ export function useReports() {
     };
 
     await db.reports.put(updated);
+    pushReportToCloud(updated);
   };
 
   /**
@@ -212,6 +251,7 @@ export function useReports() {
     };
 
     await db.reports.put(updated);
+    pushReportToCloud(updated);
   };
 
   /**
@@ -229,6 +269,7 @@ export function useReports() {
     };
 
     await db.reports.put(updated);
+    pushReportToCloud(updated);
   };
 
   /**
@@ -246,6 +287,7 @@ export function useReports() {
 
     await db.profile.clear();
     await db.profile.add(updated);
+    pushProfileToCloud(updated);
   };
 
   /**
@@ -262,6 +304,7 @@ export function useReports() {
 
     await db.profile.clear();
     await db.profile.add(updated);
+    pushProfileToCloud(updated);
   };
 
   /**
@@ -270,11 +313,15 @@ export function useReports() {
   const updateProfile = async (updated: AppProfile) => {
     await db.profile.clear();
     await db.profile.add(updated);
+    pushProfileToCloud(updated);
   };
 
   return {
     reports: reports || [],
     profile,
+    syncCode,
+    cloudStatus,
+    changeSyncCode,
     getOrCreateReport,
     setWeekType,
     saveReport,
