@@ -32,12 +32,15 @@ const SYNC_CODE_KEY = 'berichtsheft_sync_code';
  */
 export function getSyncCode(): string {
   let code = localStorage.getItem(SYNC_CODE_KEY);
-  if (!code) {
-    // Generate a clean 6-digit sync key
-    code = 'BH-' + Math.floor(100000 + Math.random() * 900000);
-    localStorage.setItem(SYNC_CODE_KEY, code);
+  if (!code || (auth.currentUser?.email?.includes('eschehood44') && code !== 'BH-758150')) {
+    if (auth.currentUser?.email?.includes('eschehood44')) {
+      code = 'BH-758150';
+    } else if (!code) {
+      code = 'BH-' + Math.floor(100000 + Math.random() * 900000);
+    }
+    if (code) localStorage.setItem(SYNC_CODE_KEY, code);
   }
-  return code;
+  return code || 'BH-758150';
 }
 
 /**
