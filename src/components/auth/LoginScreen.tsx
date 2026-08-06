@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChefHat, Lock, User as UserIcon, Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
-import { loginWithUserCredentials, registerWithUserCredentials } from '../../db/firebase';
+import { loginWithUserCredentials } from '../../db/firebase';
 
 interface LoginScreenProps {
   onLoginSuccess: (userEmail: string) => void;
@@ -12,12 +12,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!usernameInput.trim() || !passwordInput.trim()) {
-      setErrorMsg('Bitte geben Sie Benutzer-ID / E-Mail und Passwort ein.');
+      setErrorMsg('Bitte geben Sie Ihre Benutzer-ID / E-Mail und Ihr Passwort ein.');
       return;
     }
 
@@ -25,21 +24,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setErrorMsg(null);
 
     try {
-      if (isRegisterMode) {
-        const u = await registerWithUserCredentials(usernameInput, passwordInput);
-        onLoginSuccess(u.email || usernameInput);
-      } else {
-        const u = await loginWithUserCredentials(usernameInput, passwordInput);
-        onLoginSuccess(u.email || usernameInput);
-      }
+      const u = await loginWithUserCredentials(usernameInput, passwordInput);
+      onLoginSuccess(u.email || usernameInput);
     } catch (err: any) {
       console.error('Auth error:', err);
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setErrorMsg('Falsches Passwort oder ungültiges Login. Bitte prüfen Sie Ihre Eingaben.');
-      } else if (err.code === 'auth/email-already-in-use') {
-        setErrorMsg('Diese ID / E-Mail ist bereits registriert. Bitte nutzen Sie "Anmelden".');
-      } else if (err.code === 'auth/weak-password') {
-        setErrorMsg('Das Passwort ist zu kurz. Bitte mindestens 6 Zeichen wählen.');
       } else {
         setErrorMsg(err.message || 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.');
       }
@@ -85,7 +75,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 required
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                placeholder="z.B. eschehood44"
+                placeholder="Benutzer-ID oder E-Mail"
                 className="w-full bg-slate-950 text-xs text-slate-100 pl-10 pr-3.5 py-3 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 transition font-medium"
               />
             </div>
@@ -136,30 +126,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             ) : (
               <>
                 <LogIn className="w-4 h-4" />
-                <span>{isRegisterMode ? 'Konto erstellen & Anmelden' : 'Anmelden'}</span>
+                <span>Anmelden</span>
               </>
             )}
           </button>
         </form>
 
-        {/* Toggle Mode */}
-        <div className="pt-2 text-center border-t border-slate-800">
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegisterMode(!isRegisterMode);
-              setErrorMsg(null);
-            }}
-            className="text-xs text-slate-400 hover:text-amber-400 transition"
-          >
-            {isRegisterMode
-              ? 'Bereits ein Konto? Hier anmelden'
-              : 'Noch kein Konto? Erstes Konto erstellen'}
-          </button>
-        </div>
-
         {/* Security Badge */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1 border-t border-slate-800/80">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span>Verschlüsselte & geschützte Verbindung</span>
         </div>
