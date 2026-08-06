@@ -11,6 +11,9 @@ import { RemoteApprovalModal } from './components/signature/RemoteApprovalModal'
 import { BatchExportModal } from './components/pdf/BatchExportModal';
 import { ProfileModal } from './components/profile/ProfileModal';
 import { CloudSyncModal } from './components/ui/CloudSyncModal';
+import { LoginScreen } from './components/auth/LoginScreen';
+import { subscribeAuthState, logoutUser } from './db/firebase';
+import type { User } from 'firebase/auth';
 import { IhkReportPdfTemplate } from './components/pdf/IhkReportPdfTemplate';
 import { PDFViewer } from '@react-pdf/renderer';
 import confetti from 'canvas-confetti';
@@ -55,7 +58,9 @@ export function App() {
   const [activeReport, setActiveReport] = useState<Wochenbericht | null>(null);
   const [activeTab, setActiveTab] = useState<'calendar' | 'editor' | 'export'>('calendar');
 
-  // Modals & Feedback
+  // Auth & Modals
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCloudSyncModal, setShowCloudSyncModal] = useState(false);
   const [showBatchExportModal, setShowBatchExportModal] = useState(false);
@@ -66,6 +71,15 @@ export function App() {
     role: 'TRAINEE' | 'TRAINER';
   }>({ isOpen: false, role: 'TRAINEE' });
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+
+  // Subscribe to Firebase Auth
+  useEffect(() => {
+    const unsub = subscribeAuthState((user) => {
+      setCurrentUser(user);
+      setAuthChecked(true);
+    });
+    return () => unsub();
+  }, []);
 
   // Initialize profile & default report
   useEffect(() => {
@@ -135,6 +149,10 @@ export function App() {
   const isSchoolMode = activeReport?.wochenTyp === 'SCHULE' || activeReport?.wochenTyp === 'SCHULE_BETRIEB';
   const isCompanyMode = activeReport?.wochenTyp === 'BETRIEB' || activeReport?.wochenTyp === 'SCHULE_BETRIEB' || activeReport?.wochenTyp === 'URLAUB' || activeReport?.wochenTyp === 'KRANK';
 
+  if (authChecked && !currentUser) {
+    return <LoginScreen onLoginSuccess={() => {}} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Bar Header */}
@@ -145,6 +163,8 @@ export function App() {
         onOpenProfile={() => setShowProfileModal(true)}
         onOpenBatchExport={() => setShowBatchExportModal(true)}
         onOpenCloudSync={() => setShowCloudSyncModal(true)}
+        onLogout={logoutUser}
+        currentUserEmail={currentUser?.email}
         syncCode={syncCode}
         cloudStatus={cloudStatus}
         approvedCount={approvedCount}

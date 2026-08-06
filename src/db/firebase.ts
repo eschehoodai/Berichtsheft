@@ -1,5 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs, writeBatch } from 'firebase/firestore';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  type User
+} from 'firebase/auth';
 import type { Wochenbericht, AppProfile } from '../types/report';
 import { db } from './database';
 
@@ -15,6 +23,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const firestore = getFirestore(app);
+export const auth = getAuth(app);
 
 const SYNC_CODE_KEY = 'berichtsheft_sync_code';
 
@@ -180,3 +189,58 @@ export async function pullAllFromCloud(syncCode: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Format user ID or email into a valid email address for Firebase Auth
+ */
+export function formatAuthEmail(input: string): string {
+  const trimmed = input.trim();
+  if (trimmed.includes('@')) return trimmed;
+  return `${trimmed.toLowerCase()}@berichtsheft.app`;
+}
+
+/**
+ * Login with User ID / Email & Password
+ */
+export async function loginWithUserCredentials(idOrEmail: string, pass: string): Promise<User> {
+  const email = formatAuthEmail(idOrEmail);
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    return cred.user;
+  } catch (err: any) {
+    // If account does not exist yet, attempt automatic creation
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+      try {
+        const newCred = await createUserWithEmailAndPassword(auth, email, pass);
+        return newCred.user;
+      } catch (createErr) {
+        throw err;
+      }
+    }
+    throw err;
+  }
+}
+
+/**
+ * Register a new user
+ */
+export async function registerWithUserCredentials(idOrEmail: string, pass: string): Promise<User> {
+  const email = formatAuthEmail(idOrEmail);
+  const cred = await createUserWithEmailAndPassword(auth, email, pass);
+  return cred.user;
+}
+
+/**
+ * Sign out current user
+ */
+export async function logoutUser(): Promise<void> {
+  await firebaseSignOut(auth);
+}
+
+/**
+ * Subscribe to auth state changes
+ */
+export function subscribeAuthState(onChange: (user: User | null) => void) {
+  return onAuthStateChanged(auth, onChange);
+}
+

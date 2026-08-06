@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChefHat, Calendar, FileText, ShieldCheck, Download, Settings, Cloud } from 'lucide-react';
+import { ChefHat, Calendar, FileText, ShieldCheck, Download, Settings, Cloud, LogOut, User as UserIcon } from 'lucide-react';
 import type { AppProfile } from '../../types/report';
 
 interface HeaderProps {
@@ -9,6 +9,8 @@ interface HeaderProps {
   onOpenProfile: () => void;
   onOpenBatchExport: () => void;
   onOpenCloudSync?: () => void;
+  onLogout?: () => void;
+  currentUserEmail?: string | null;
   syncCode?: string;
   cloudStatus?: 'CONNECTED' | 'SYNCING' | 'OFFLINE';
   approvedCount: number;
@@ -22,12 +24,15 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfile,
   onOpenBatchExport,
   onOpenCloudSync,
+  onLogout,
+  currentUserEmail,
   syncCode,
   cloudStatus = 'CONNECTED',
   approvedCount,
   totalWeeks
 }) => {
   const percentApproved = Math.round((approvedCount / totalWeeks) * 100) || 0;
+  const displayUser = currentUserEmail ? currentUserEmail.split('@')[0] : null;
 
   return (
     <header className="sticky top-0 z-40 glass-nav px-4 py-3 border-b border-slate-800">
@@ -61,6 +66,15 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Cloud Sync"
               >
                 <Cloud className="w-4 h-4" />
+              </button>
+            )}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-lg bg-slate-800 text-rose-400 border border-slate-700 hover:bg-rose-500/10"
+                title="Abmelden"
+              >
+                <LogOut className="w-4 h-4" />
               </button>
             )}
             <button
@@ -114,6 +128,14 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Stats & Profile Desktop */}
         <div className="hidden md:flex items-center gap-3">
+          {/* User Badge */}
+          {displayUser && (
+            <div className="flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/30 text-xs font-bold text-amber-300">
+              <UserIcon className="w-3.5 h-3.5" />
+              <span>{displayUser}</span>
+            </div>
+          )}
+
           {/* Cloud Sync Button */}
           {onOpenCloudSync && (
             <button
@@ -150,9 +172,20 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Settings className="w-5 h-5" />
           </button>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="p-2 rounded-lg bg-slate-800 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 border border-slate-700 transition"
+              title="Abmelden"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </header>
   );
 };
+
 
