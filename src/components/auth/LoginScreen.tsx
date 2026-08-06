@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChefHat, Lock, User as UserIcon, Eye, EyeOff, LogIn, Sparkles, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ChefHat, Lock, User as UserIcon, Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
 import { loginWithUserCredentials, registerWithUserCredentials } from '../../db/firebase';
 
 interface LoginScreenProps {
@@ -13,13 +13,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-
-  // Quick fill preset credentials requested by user
-  const handleQuickFillPreset = () => {
-    setUsernameInput('eschehood44');
-    setPasswordInput('Klack1996,,');
-    setErrorMsg(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,25 +65,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <p className="text-xs text-amber-400 font-semibold mt-0.5">Fachkraft Küche (BBiG § 13 & 14)</p>
           </div>
           <p className="text-xs text-slate-400">
-            Bitte melden Sie sich an, um Zugriff auf Ihre Wochenberichte und Cloud-Synchronisation zu erhalten.
+            Bitte melden Sie sich an, um Zugriff auf Ihre Wochenberichte zu erhalten.
           </p>
-        </div>
-
-        {/* Quick Fill Preset Chip */}
-        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-1.5">
-          <span className="text-[11px] font-bold text-amber-300 flex items-center justify-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Ihre gespeicherten Login-Daten:
-          </span>
-          <button
-            type="button"
-            onClick={handleQuickFillPreset}
-            className="w-full bg-slate-900/90 hover:bg-slate-800 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold py-2 px-3 rounded-xl transition flex items-center justify-center gap-2"
-          >
-            <span>ID: <strong className="text-white">eschehood44</strong></span>
-            <span className="text-slate-600">•</span>
-            <span>PW: <strong className="text-white">Klack1996,,</strong></span>
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-1" />
-          </button>
         </div>
 
         {/* Auth Form */}

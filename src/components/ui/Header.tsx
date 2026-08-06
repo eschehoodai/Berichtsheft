@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChefHat, Calendar, FileText, ShieldCheck, Download, Settings, Cloud, LogOut, User as UserIcon } from 'lucide-react';
+import { ChefHat, Calendar, FileText, ShieldCheck, Download, Settings, Cloud, LogOut } from 'lucide-react';
 import type { AppProfile } from '../../types/report';
 
 interface HeaderProps {
@@ -25,14 +25,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenBatchExport,
   onOpenCloudSync,
   onLogout,
-  currentUserEmail,
   syncCode,
   cloudStatus = 'CONNECTED',
   approvedCount,
   totalWeeks
 }) => {
   const percentApproved = Math.round((approvedCount / totalWeeks) * 100) || 0;
-  const displayUser = currentUserEmail ? currentUserEmail.split('@')[0] : null;
 
   return (
     <header className="sticky top-0 z-40 glass-nav px-4 py-3 border-b border-slate-800">
@@ -128,14 +126,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Stats & Profile Desktop */}
         <div className="hidden md:flex items-center gap-3">
-          {/* User Badge */}
-          {displayUser && (
-            <div className="flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/30 text-xs font-bold text-amber-300">
-              <UserIcon className="w-3.5 h-3.5" />
-              <span>{displayUser}</span>
-            </div>
-          )}
-
           {/* Cloud Sync Button */}
           {onOpenCloudSync && (
             <button
